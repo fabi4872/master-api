@@ -105,3 +105,8 @@ Reglas:
 - Si algo no conviene hacerse todavía, indicarlo
 - Justificar decisiones arquitectónicas
 - No sobreingenierizar
+
+---
+
+## Contexto del repositorio
+- Antes de proponer cambios o generar código, Gemini debe considerar la estructura completa del proyecto y los lineamientos definidos en este archivo

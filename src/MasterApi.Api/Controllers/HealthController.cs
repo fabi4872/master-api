@@ -1,14 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace MasterApi.Api.Controllers
+namespace MasterApi.Api.Controllers;
+
+[ApiController]
+[Route("health")]
+public class HealthController : ApiControllerBase
 {
-    [ApiController]
-    public class HealthController : ControllerBase
+    [HttpGet]
+    public IActionResult GetHealth()
     {
-        [HttpGet("/health")] // Explicitly define the route for this action
-        public IActionResult GetHealth()
-        {
-            return Ok("API is healthy. Swagger and pipeline working!");
-        }
+        return Ok("API is healthy. Swagger and pipeline working!");
     }
 }

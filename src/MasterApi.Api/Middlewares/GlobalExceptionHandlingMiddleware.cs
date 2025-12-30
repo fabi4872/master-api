@@ -1,58 +1,64 @@
-using System.Net;
-using System.Text.Json;
-using MasterApi.Application.Abstractions;
-using MasterApi.Domain.Errors;
+using System.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MasterApi.Api.Middlewares;
 
-public class GlobalExceptionHandlingMiddleware
+public class GlobalExceptionHandlingMiddleware : IExceptionHandler
 {
-    private readonly RequestDelegate _next;
     private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
-    private readonly ILocalizationService _localizationService;
-    private const string CorrelationIdHeader = "X-Correlation-ID";
+    private readonly IHostEnvironment _environment;
 
-    public GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger, ILocalizationService localizationService)
+    public GlobalExceptionHandlingMiddleware(ILogger<GlobalExceptionHandlingMiddleware> logger, IHostEnvironment environment)
     {
-        _next = next;
         _logger = logger;
-        _localizationService = localizationService;
+        _environment = environment;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async ValueTask<bool> TryHandleAsync(
+        HttpContext httpContext,
+        Exception exception,
+        CancellationToken cancellationToken)
     {
-        try
-        {
-            await _next(context);
-        }
-        catch (Exception ex)
-        {
-            var correlationId = GetCorrelationId(context);
-            _logger.LogError(ex, "An unhandled exception has occurred. CorrelationId: {CorrelationId}", correlationId);
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
 
-            var problemDetails = new ProblemDetails
-            {
-                Status = (int)HttpStatusCode.InternalServerError,
-                Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1",
-                Title = _localizationService.GetString(DomainErrors.General.UnspecifiedError),
-                Detail = _localizationService.GetString(DomainErrors.General.UnspecifiedError),
-                Instance = context.Request.Path
-            };
-            
-            problemDetails.Extensions.Add("correlationId", correlationId);
-            
-            context.Response.ContentType = "application/problem+json";
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-            
-            var json = JsonSerializer.Serialize(problemDetails);
-            await context.Response.WriteAsync(json);
+        _logger.LogError(
+            exception,
+            "An unhandled exception has occurred. TraceId: {TraceId}, Message: {Message}",
+            traceId,
+            exception.Message);
+
+        var (statusCode, title, detail) = GetProblemDetails(exception);
+        
+        var problemDetails = new ProblemDetails
+        {
+            Status = statusCode,
+            Title = title,
+            Detail = detail,
+            Instance = $"{httpContext.Request.Method} {httpContext.Request.Path}"
+        };
+
+        problemDetails.Extensions.Add("traceId", traceId);
+
+        if (_environment.IsDevelopment())
+        {
+            problemDetails.Extensions.Add("stackTrace", exception.StackTrace);
         }
+
+        httpContext.Response.StatusCode = statusCode;
+        await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+        
+        return true;
     }
-    
-    private static string GetCorrelationId(HttpContext context)
+
+    private (int StatusCode, string Title, string Detail) GetProblemDetails(Exception exception)
     {
-        context.Request.Headers.TryGetValue(CorrelationIdHeader, out var correlationId);
-        return correlationId.FirstOrDefault() ?? context.TraceIdentifier;
+        // Here you could add more specific exception handling if needed
+        return
+        (
+            StatusCodes.Status500InternalServerError,
+            "Server Error",
+            "An unexpected internal server error has occurred."
+        );
     }
 }

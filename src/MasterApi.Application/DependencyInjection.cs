@@ -1,3 +1,5 @@
+using MasterApi.Application.Abstractions.Services;
+using MasterApi.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MasterApi.Application;
@@ -6,7 +8,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        // Aqui se registrarian los servicios de la capa de aplicacion, como MediatR, AutoMapper, etc.
+        services.AddScoped<IUserService, UserService>();
+        
         return services;
     }
 }

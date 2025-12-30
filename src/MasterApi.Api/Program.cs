@@ -18,13 +18,17 @@ builder.Services.AddControllers();
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandlingMiddleware>();
+builder.Services.AddProblemDetails();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+app.UseExceptionHandler();
+
 
 // This will make sure that the CorrelationId is added to the logs
 app.UseSerilogRequestLogging();

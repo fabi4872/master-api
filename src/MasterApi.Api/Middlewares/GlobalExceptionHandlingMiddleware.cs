@@ -1,6 +1,6 @@
 using System.Net;
 using System.Text.Json;
-using MasterApi.Api.Services;
+using MasterApi.Application.Abstractions;
 using MasterApi.Domain.Errors;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,10 +10,10 @@ public class GlobalExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
-    private readonly LocalizationService _localizationService;
+    private readonly ILocalizationService _localizationService;
     private const string CorrelationIdHeader = "X-Correlation-ID";
 
-    public GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger, LocalizationService localizationService)
+    public GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger, ILocalizationService localizationService)
     {
         _next = next;
         _logger = logger;

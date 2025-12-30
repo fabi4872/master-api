@@ -1,5 +1,4 @@
 using MasterApi.Api.Middlewares;
-using MasterApi.Api.Services;
 using MasterApi.Application;
 using MasterApi.Infrastructure;
 using Serilog;
@@ -16,7 +15,6 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 
 // 2. Add services for the API layer
 builder.Services.AddControllers();
-builder.Services.AddSingleton<LocalizationService>();
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
 

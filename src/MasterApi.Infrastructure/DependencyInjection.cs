@@ -18,6 +18,7 @@ public static class DependencyInjection
 
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.AddSingleton<IJwtProvider, JwtProvider>();
+        services.AddSingleton<IPasswordHasherService, PasswordHasherService>();
 
         services.AddSingleton<IUserRepository, UserRepository>();
 

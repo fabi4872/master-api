@@ -14,11 +14,13 @@ public partial class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IJwtProvider _jwtProvider;
+    private readonly IPasswordHasherService _passwordHasher;
 
-    public UserService(IUserRepository userRepository, IJwtProvider jwtProvider)
+    public UserService(IUserRepository userRepository, IJwtProvider jwtProvider, IPasswordHasherService passwordHasher)
     {
         _userRepository = userRepository;
         _jwtProvider = jwtProvider;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<Result<User>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -65,7 +67,9 @@ public partial class UserService : IUserService
             return Result.Failure<User>(DomainErrors.User.EmailAlreadyExists);
         }
 
-        var user = new User(Guid.NewGuid(), request.Email, request.Name, request.Password);
+        var (hash, salt) = _passwordHasher.Hash(request.Password);
+
+        var user = new User(Guid.NewGuid(), request.Email, request.Name, hash, salt);
         
         _userRepository.Add(user);
 
@@ -91,8 +95,7 @@ public partial class UserService : IUserService
             return Result.Failure<LoginResponse>(DomainErrors.User.InvalidCredentials);
         }
 
-        // TODO: Replace with password hashing and comparison
-        if (user.Password != request.Password)
+        if (!_passwordHasher.Verify(request.Password, user.PasswordHash, user.PasswordSalt))
         {
             return Result.Failure<LoginResponse>(DomainErrors.User.InvalidCredentials);
         }

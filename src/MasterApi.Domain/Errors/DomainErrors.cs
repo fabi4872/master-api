@@ -19,5 +19,6 @@ public static class DomainErrors
         public static readonly Error EmailRequired = new("user.emailrequired", "The email is required.");
         public static readonly Error EmailInvalid = new("user.emailinvalid", "The email format is invalid.");
         public static readonly Error EmailAlreadyExists = new("user.emailalreadyexists", "The email is already in use.");
+        public static readonly Error PasswordRequired = new("user.passwordrequired", "The password is required.");
     }
 }

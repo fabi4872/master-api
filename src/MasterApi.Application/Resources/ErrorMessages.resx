@@ -73,4 +73,10 @@
   <data name="user.emailalreadyexists" xml:space="preserve">
     <value>El correo electrónico ya está en uso.</value>
   </data>
+  <data name="user.passwordrequired" xml:space="preserve">
+    <value>La contraseña es requerida.</value>
+  </data>
+  <data name="user.invalidcredentials" xml:space="preserve">
+    <value>Las credenciales son inválidas.</value>
+  </data>
 </root>

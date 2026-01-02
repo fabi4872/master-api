@@ -34,6 +34,13 @@ public class ApiControllerBase : ControllerBase
                 StatusCodes.Status401Unauthorized,
                 result.Error));
         }
+        if (result.Error == DomainErrors.User.EmailAlreadyExists)
+        {
+            return Conflict(CreateProblemDetails(
+                "Conflict",
+                StatusCodes.Status409Conflict,
+                result.Error));
+        }
         
         return BadRequest(CreateProblemDetails(
             "Bad Request",

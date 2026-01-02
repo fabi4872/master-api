@@ -51,14 +51,47 @@ public partial class UserService : IUserService
             return Result.Failure<User>(DomainErrors.User.EmailInvalid);
         }
 
+        if (string.IsNullOrWhiteSpace(request.Password))
+        {
+            return Result.Failure<User>(DomainErrors.User.PasswordRequired);
+        }
+
         if (!await _userRepository.IsEmailUniqueAsync(request.Email, cancellationToken))
         {
             return Result.Failure<User>(DomainErrors.User.EmailAlreadyExists);
         }
 
-        var user = new User(Guid.NewGuid(), request.Name, request.Email);
+        var user = new User(Guid.NewGuid(), request.Email, request.Name, request.Password);
         
         _userRepository.Add(user);
+
+        return user;
+    }
+
+    public async Task<Result<User>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            return Result.Failure<User>(DomainErrors.User.EmailRequired);
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Password))
+        {
+            return Result.Failure<User>(DomainErrors.User.PasswordRequired);
+        }
+
+        var user = await _userRepository.GetUserByEmailAsync(request.Email, cancellationToken);
+
+        if (user is null)
+        {
+            return Result.Failure<User>(DomainErrors.User.InvalidCredentials);
+        }
+
+        // TODO: Replace with password hashing and comparison
+        if (user.Password != request.Password)
+        {
+            return Result.Failure<User>(DomainErrors.User.InvalidCredentials);
+        }
 
         return user;
     }

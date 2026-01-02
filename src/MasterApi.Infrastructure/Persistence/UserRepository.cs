@@ -12,7 +12,13 @@ public class UserRepository : IUserRepository
         var user = _users.FirstOrDefault(u => u.Id == id);
         return Task.FromResult(user);
     }
-    
+
+    public Task<User?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        var user = _users.FirstOrDefault(u => u.Email == email);
+        return Task.FromResult(user);
+    }
+
     public Task<bool> IsEmailUniqueAsync(string email, CancellationToken cancellationToken = default)
     {
         var isUnique = !_users.Exists(u => u.Email == email);

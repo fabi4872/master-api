@@ -8,4 +8,5 @@ public interface IUserService
 {
     Task<Result<User>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Result<User>> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken = default);
+    Task<Result<User>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
 }

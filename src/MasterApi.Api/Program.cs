@@ -110,6 +110,8 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseMiddleware<AuditMiddleware>();
+
 app.MapControllers();
 
 app.Run();

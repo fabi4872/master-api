@@ -1,7 +1,9 @@
 using MasterApi.Application.Abstractions;
 using MasterApi.Application.Abstractions.Authentication;
+using MasterApi.Application.Abstractions.Auditing;
 using MasterApi.Application.Abstractions.Persistence;
 using MasterApi.Infrastructure.Authentication;
+using MasterApi.Infrastructure.Auditing;
 using MasterApi.Infrastructure.Persistence;
 using MasterApi.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
@@ -21,6 +23,7 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasherService, PasswordHasherService>();
 
         services.AddSingleton<IUserRepository, UserRepository>();
+        services.AddSingleton<IAuditService, AuditService>();
 
         return services;
     }

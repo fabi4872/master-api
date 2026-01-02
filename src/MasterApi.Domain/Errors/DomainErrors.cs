@@ -15,5 +15,9 @@ public static class DomainErrors
     {
         public static readonly Error NotFound = new("user.notfound", "The user was not found.");
         public static readonly Error InvalidCredentials = new("user.invalidcredentials", "Invalid credentials.");
+        public static readonly Error NameRequired = new("user.namerequired", "The name is required.");
+        public static readonly Error EmailRequired = new("user.emailrequired", "The email is required.");
+        public static readonly Error EmailInvalid = new("user.emailinvalid", "The email format is invalid.");
+        public static readonly Error EmailAlreadyExists = new("user.emailalreadyexists", "The email is already in use.");
     }
 }

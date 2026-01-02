@@ -61,4 +61,16 @@
   <data name="Errors.General.UnspecifiedError" xml:space="preserve">
     <value>Ha ocurrido un error inesperado.</value>
   </data>
+  <data name="user.namerequired" xml:space="preserve">
+    <value>El nombre es requerido.</value>
+  </data>
+  <data name="user.emailrequired" xml:space="preserve">
+    <value>El correo electrónico es requerido.</value>
+  </data>
+  <data name="user.emailinvalid" xml:space="preserve">
+    <value>El formato del correo electrónico es inválido.</value>
+  </data>
+  <data name="user.emailalreadyexists" xml:space="preserve">
+    <value>El correo electrónico ya está en uso.</value>
+  </data>
 </root>

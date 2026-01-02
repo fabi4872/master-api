@@ -12,10 +12,15 @@ public class UserRepository : IUserRepository
         var user = _users.FirstOrDefault(u => u.Id == id);
         return Task.FromResult(user);
     }
+    
+    public Task<bool> IsEmailUniqueAsync(string email, CancellationToken cancellationToken = default)
+    {
+        var isUnique = !_users.Exists(u => u.Email == email);
+        return Task.FromResult(isUnique);
+    }
 
-    public Task AddAsync(User user, CancellationToken cancellationToken = default)
+    public void Add(User user)
     {
         _users.Add(user);
-        return Task.CompletedTask;
     }
 }

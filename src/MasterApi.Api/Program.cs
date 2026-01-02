@@ -3,6 +3,7 @@ using MasterApi.Api.Middlewares;
 using MasterApi.Application;
 using MasterApi.Infrastructure;
 using MasterApi.Infrastructure.Authentication;
+using MasterApi.Application.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -47,6 +48,9 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("RequireAdmin", policy => policy.RequireRole("Admin"));
     options.AddPolicy("RequireUser", policy => policy.RequireRole("User"));
+
+    options.AddPolicy("RequireUsersReadPermission", policy => policy.RequireClaim("permission", Permissions.UsersRead));
+    options.AddPolicy("RequireUsersCreatePermission", policy => policy.RequireClaim("permission", Permissions.UsersCreate));
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

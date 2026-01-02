@@ -25,7 +25,9 @@ public class UsersController : ApiControllerBase
         var result = await _userService.GetByIdAsync(id, cancellationToken);
         return result.IsSuccess ? Ok(result.Value) : HandleFailure(result);
     }
-    
+
+    //[Authorize(Policy = "RequireUsersCreatePermission")]
+    [AllowAnonymous]
     [HttpPost]
     [ProducesResponseType(typeof(User), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

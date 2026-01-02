@@ -7,6 +7,7 @@ public class User
     public string Name { get; private set; }
     public string PasswordHash { get; private set; }
     public string PasswordSalt { get; private set; }
+    public UserRole Role { get; private set; }
 
     // Private constructor for EF Core
     private User() {
@@ -14,14 +15,16 @@ public class User
         Name = string.Empty;
         PasswordHash = string.Empty;
         PasswordSalt = string.Empty;
+        Role = UserRole.User; // Default role
     }
 
-    public User(Guid id, string email, string name, string passwordHash, string passwordSalt)
+    public User(Guid id, string email, string name, string passwordHash, string passwordSalt, UserRole role)
     {
         Id = id;
         Email = email;
         Name = name;
         PasswordHash = passwordHash;
         PasswordSalt = passwordSalt;
+        Role = role;
     }
 }

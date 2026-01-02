@@ -18,7 +18,7 @@ public class UsersController : ApiControllerBase
         _userService = userService;
     }
 
-    [Authorize]
+    [Authorize(Policy = "RequireAdmin")]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetUserById(Guid id, CancellationToken cancellationToken)
     {

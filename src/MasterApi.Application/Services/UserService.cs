@@ -69,7 +69,7 @@ public partial class UserService : IUserService
 
         var (hash, salt) = _passwordHasher.Hash(request.Password);
 
-        var user = new User(Guid.NewGuid(), request.Email, request.Name, hash, salt);
+        var user = new User(Guid.NewGuid(), request.Email, request.Name, hash, salt, request.Role);
         
         _userRepository.Add(user);
 

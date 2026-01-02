@@ -1,6 +1,8 @@
 using MasterApi.Application.Abstractions.Services;
 using MasterApi.Application.Users.Requests;
+using MasterApi.Application.Users.Responses;
 using MasterApi.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MasterApi.Api.Controllers;
@@ -16,6 +18,7 @@ public class UsersController : ApiControllerBase
         _userService = userService;
     }
 
+    [Authorize]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetUserById(Guid id, CancellationToken cancellationToken)
     {
@@ -33,8 +36,9 @@ public class UsersController : ApiControllerBase
         var result = await _userService.CreateAsync(request, cancellationToken);
         return result.IsSuccess ? CreatedAtAction(nameof(GetUserById), new { id = result.Value.Id }, result.Value) : HandleFailure(result);
     }
+
     [HttpPost("login")]
-    [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]

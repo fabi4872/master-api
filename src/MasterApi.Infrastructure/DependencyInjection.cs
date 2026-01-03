@@ -24,6 +24,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IUserRepository, UserRepository>();
         services.AddSingleton<IAuditService, AuditService>();
+        services.AddSingleton<IBusinessAuditService, BusinessAuditService>();
 
         return services;
     }

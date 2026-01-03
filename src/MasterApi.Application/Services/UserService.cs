@@ -7,6 +7,8 @@ using MasterApi.Application.Users.Requests;
 using MasterApi.Domain.Core;
 using MasterApi.Domain.Entities;
 using MasterApi.Domain.Errors;
+using MasterApi.Application.Auditing;
+using MasterApi.Application.Abstractions.Auditing;
 
 namespace MasterApi.Application.Services;
 
@@ -15,12 +17,14 @@ public partial class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IJwtProvider _jwtProvider;
     private readonly IPasswordHasherService _passwordHasher;
+    private readonly IBusinessAuditService _businessAuditService;
 
-    public UserService(IUserRepository userRepository, IJwtProvider jwtProvider, IPasswordHasherService passwordHasher)
+    public UserService(IUserRepository userRepository, IJwtProvider jwtProvider, IPasswordHasherService passwordHasher, IBusinessAuditService businessAuditService)
     {
         _userRepository = userRepository;
         _jwtProvider = jwtProvider;
         _passwordHasher = passwordHasher;
+        _businessAuditService = businessAuditService;
     }
 
     public async Task<Result<User>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -73,18 +77,43 @@ public partial class UserService : IUserService
         
         _userRepository.Add(user);
 
+        await _businessAuditService.WriteAsync(new BusinessAuditEvent
+        {
+            EventType = "UserCreated",
+            TimestampUtc = DateTime.UtcNow,
+            UserId = user.Id,
+            Metadata = { { "Email", user.Email }, { "Role", user.Role.ToString() } },
+            CorrelationId = System.Diagnostics.Activity.Current?.Id ?? string.Empty
+        });
+
         return user;
     }
 
     public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
+        var correlationId = System.Diagnostics.Activity.Current?.Id ?? string.Empty;
+
         if (string.IsNullOrWhiteSpace(request.Email))
         {
+            await _businessAuditService.WriteAsync(new BusinessAuditEvent
+            {
+                EventType = "UserLoginFailed",
+                TimestampUtc = DateTime.UtcNow,
+                Metadata = { { "Reason", "EmailRequired" } },
+                CorrelationId = correlationId
+            });
             return Result.Failure<LoginResponse>(DomainErrors.User.EmailRequired);
         }
 
         if (string.IsNullOrWhiteSpace(request.Password))
         {
+            await _businessAuditService.WriteAsync(new BusinessAuditEvent
+            {
+                EventType = "UserLoginFailed",
+                TimestampUtc = DateTime.UtcNow,
+                Metadata = { { "Email", request.Email }, { "Reason", "PasswordRequired" } },
+                CorrelationId = correlationId
+            });
             return Result.Failure<LoginResponse>(DomainErrors.User.PasswordRequired);
         }
 
@@ -92,16 +121,40 @@ public partial class UserService : IUserService
 
         if (user is null)
         {
+            await _businessAuditService.WriteAsync(new BusinessAuditEvent
+            {
+                EventType = "UserLoginFailed",
+                TimestampUtc = DateTime.UtcNow,
+                Metadata = { { "Email", request.Email }, { "Reason", "InvalidCredentials" } },
+                CorrelationId = correlationId
+            });
             return Result.Failure<LoginResponse>(DomainErrors.User.InvalidCredentials);
         }
 
         if (!_passwordHasher.Verify(request.Password, user.PasswordHash, user.PasswordSalt))
         {
+            await _businessAuditService.WriteAsync(new BusinessAuditEvent
+            {
+                EventType = "UserLoginFailed",
+                TimestampUtc = DateTime.UtcNow,
+                UserId = user.Id,
+                Metadata = { { "Email", request.Email }, { "Reason", "InvalidCredentials" } },
+                CorrelationId = correlationId
+            });
             return Result.Failure<LoginResponse>(DomainErrors.User.InvalidCredentials);
         }
 
         var token = _jwtProvider.Generate(user);
         
+        await _businessAuditService.WriteAsync(new BusinessAuditEvent
+        {
+            EventType = "UserLoginSucceeded",
+            TimestampUtc = DateTime.UtcNow,
+            UserId = user.Id,
+            Metadata = { { "Email", user.Email } },
+            CorrelationId = correlationId
+        });
+
         return new LoginResponse(token.AccessToken, token.ExpiresAt);
     }
 

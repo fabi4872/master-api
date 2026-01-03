@@ -9,7 +9,13 @@ public class UserRepository : IUserRepository
 
     public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var user = _users.FirstOrDefault(u => u.Id == id);
+        var user = _users.FirstOrDefault(u => u.Id == id && !u.IsDeleted);
+        return Task.FromResult(user);
+    }
+    
+    public Task<User?> GetDeletedByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var user = _users.FirstOrDefault(u => u.Id == id && u.IsDeleted);
         return Task.FromResult(user);
     }
 
@@ -21,7 +27,7 @@ public class UserRepository : IUserRepository
 
     public Task<bool> IsEmailUniqueAsync(string email, CancellationToken cancellationToken = default)
     {
-        var isUnique = !_users.Exists(u => u.Email == email);
+        var isUnique = !_users.Exists(u => u.Email == email && !u.IsDeleted);
         return Task.FromResult(isUnique);
     }
 

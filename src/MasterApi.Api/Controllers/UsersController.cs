@@ -49,4 +49,36 @@ public class UsersController : ApiControllerBase
         var result = await _userService.LoginAsync(request, cancellationToken);
         return result.IsSuccess ? Ok(result.Value) : HandleFailure(result);
     }
+
+    [Authorize(Policy = "RequireAdmin")]
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> DeleteUser(Guid id, CancellationToken cancellationToken)
+    {
+        var performedByUserId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
+
+        var result = await _userService.DeleteUserAsync(id, Guid.TryParse(performedByUserId, out var userId) ? userId : null, cancellationToken);
+
+        return result.IsSuccess ? NoContent() : HandleFailure(result);
+    }
+
+    [Authorize(Policy = "RequireAdmin")]
+    [HttpPost("{id:guid}/restore")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> RestoreUser(Guid id, CancellationToken cancellationToken)
+    {
+        var performedByUserId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "userId")?.Value;
+
+        var result = await _userService.RestoreUserAsync(id, Guid.TryParse(performedByUserId, out var userId) ? userId : null, cancellationToken);
+
+        return result.IsSuccess ? Ok() : HandleFailure(result);
+    }
 }

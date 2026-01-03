@@ -20,5 +20,8 @@ public static class DomainErrors
         public static readonly Error EmailInvalid = new("user.emailinvalid", "The email format is invalid.");
         public static readonly Error EmailAlreadyExists = new("user.emailalreadyexists", "The email is already in use.");
         public static readonly Error PasswordRequired = new("user.passwordrequired", "The password is required.");
+        public static readonly Error AlreadyDeleted = new("user.alreadydeleted", "The user is already deleted.");
+        public static readonly Error NotDeleted = new("user.notdeleted", "The user is not deleted.");
+        public static readonly Error Deleted = new("user.deleted", "The user is deleted.");
     }
 }

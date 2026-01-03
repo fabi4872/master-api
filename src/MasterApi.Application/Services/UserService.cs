@@ -130,6 +130,19 @@ public partial class UserService : IUserService
             });
             return Result.Failure<LoginResponse>(DomainErrors.User.InvalidCredentials);
         }
+        
+        if (user.IsDeleted)
+        {
+            await _businessAuditService.WriteAsync(new BusinessAuditEvent
+            {
+                EventType = "UserLoginFailed",
+                TimestampUtc = DateTime.UtcNow,
+                UserId = user.Id,
+                Metadata = { { "Email", request.Email }, { "Reason", "UserIsDeleted" } },
+                CorrelationId = correlationId
+            });
+            return Result.Failure<LoginResponse>(DomainErrors.User.Deleted);
+        }
 
         if (!_passwordHasher.Verify(request.Password, user.PasswordHash, user.PasswordSalt))
         {
@@ -156,6 +169,98 @@ public partial class UserService : IUserService
         });
 
         return new LoginResponse(token.AccessToken, token.ExpiresAt);
+    }
+
+    public async Task<Result> DeleteUserAsync(Guid userId, Guid? performedByUserId, CancellationToken cancellationToken = default)
+    {
+        var correlationId = System.Diagnostics.Activity.Current?.Id ?? string.Empty;
+
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+
+        if (user is null)
+        {
+            await _businessAuditService.WriteAsync(new BusinessAuditEvent
+            {
+                EventType = "UserDeletionFailed",
+                TimestampUtc = DateTime.UtcNow,
+                UserId = performedByUserId,
+                Metadata = { { "TargetUserId", userId.ToString() }, { "Reason", "UserNotFound" } },
+                CorrelationId = correlationId
+            });
+            return Result.Failure(DomainErrors.User.NotFound);
+        }
+
+        if (user.IsDeleted)
+        {
+            await _businessAuditService.WriteAsync(new BusinessAuditEvent
+            {
+                EventType = "UserDeletionFailed",
+                TimestampUtc = DateTime.UtcNow,
+                UserId = performedByUserId,
+                Metadata = { { "TargetUserId", userId.ToString() }, { "Reason", "AlreadyDeleted" } },
+                CorrelationId = correlationId
+            });
+            return Result.Failure(DomainErrors.User.AlreadyDeleted);
+        }
+
+        user.Delete(performedByUserId ?? Guid.Empty); // Assuming a system user if performedByUserId is null
+
+        await _businessAuditService.WriteAsync(new BusinessAuditEvent
+        {
+            EventType = "UserDeleted",
+            TimestampUtc = DateTime.UtcNow,
+            UserId = performedByUserId,
+            Metadata = { { "TargetUserId", userId.ToString() } },
+            CorrelationId = correlationId
+        });
+
+        return Result.Success();
+    }
+
+    public async Task<Result> RestoreUserAsync(Guid userId, Guid? performedByUserId, CancellationToken cancellationToken = default)
+    {
+        var correlationId = System.Diagnostics.Activity.Current?.Id ?? string.Empty;
+
+        var user = await _userRepository.GetDeletedByIdAsync(userId, cancellationToken);
+
+        if (user is null)
+        {
+            await _businessAuditService.WriteAsync(new BusinessAuditEvent
+            {
+                EventType = "UserRestorationFailed",
+                TimestampUtc = DateTime.UtcNow,
+                UserId = performedByUserId,
+                Metadata = { { "TargetUserId", userId.ToString() }, { "Reason", "UserNotFound" } },
+                CorrelationId = correlationId
+            });
+            return Result.Failure(DomainErrors.User.NotFound);
+        }
+
+        if (!user.IsDeleted)
+        {
+            await _businessAuditService.WriteAsync(new BusinessAuditEvent
+            {
+                EventType = "UserRestorationFailed",
+                TimestampUtc = DateTime.UtcNow,
+                UserId = performedByUserId,
+                Metadata = { { "TargetUserId", userId.ToString() }, { "Reason", "NotDeleted" } },
+                CorrelationId = correlationId
+            });
+            return Result.Failure(DomainErrors.User.NotDeleted);
+        }
+
+        user.Restore();
+
+        await _businessAuditService.WriteAsync(new BusinessAuditEvent
+        {
+            EventType = "UserRestored",
+            TimestampUtc = DateTime.UtcNow,
+            UserId = performedByUserId,
+            Metadata = { { "TargetUserId", userId.ToString() } },
+            CorrelationId = correlationId
+        });
+
+        return Result.Success();
     }
 
     [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")]

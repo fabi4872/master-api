@@ -2,10 +2,12 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using MasterApi.Application.Abstractions.Authentication;
+using MasterApi.Application.Authentication;
 using MasterApi.Application.Authorization;
 using MasterApi.Domain.Entities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Cryptography;
 
 namespace MasterApi.Infrastructure.Authentication;
 
@@ -55,5 +57,19 @@ public class JwtProvider : IJwtProvider
         var tokenValue = new JwtSecurityTokenHandler().WriteToken(token);
 
         return (tokenValue, token.ValidTo);
+    }
+
+    public RefreshToken GenerateRefreshToken()
+    {
+        var randomNumber = new byte[32];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        
+        // TODO: Persist refresh token in DB in the future
+        return new RefreshToken
+        {
+            Token = Convert.ToBase64String(randomNumber),
+            ExpiresAtUtc = DateTime.UtcNow.AddDays(7)
+        };
     }
 }

@@ -48,7 +48,7 @@ public class ApiControllerBase : ControllerBase
             result.Error));
     }
 
-    private ProblemDetails CreateProblemDetails(
+    protected ProblemDetails CreateProblemDetails(
         string title,
         int status,
         Error error,

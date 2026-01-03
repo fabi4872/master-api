@@ -24,4 +24,11 @@ public static class DomainErrors
         public static readonly Error NotDeleted = new("user.notdeleted", "The user is not deleted.");
         public static readonly Error Deleted = new("user.deleted", "The user is deleted.");
     }
+
+    public static class Auth
+    {
+        public static readonly Error RefreshTokenRequired = new("auth.refresh_token_required", "Refresh token is required.");
+        public static readonly Error RefreshTokenExpired = new("auth.refresh_token_expired", "Refresh token is expired.");
+        public static readonly Error InvalidRefreshToken = new("auth.invalid_refresh_token", "Invalid refresh token.");
+    }
 }
